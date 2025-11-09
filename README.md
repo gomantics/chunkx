@@ -5,12 +5,11 @@ A Go library for AST-based code chunking implementing the CAST (Chunking via Abs
 ## Features
 
 - **Syntax-aware chunking**: Respects code structure (functions, classes, methods) instead of arbitrarily splitting at line boundaries
-- **Multi-language support**: Works with 30+ languages including Bash, C, C++, C#, CSS, Cue, Dockerfile, Elixir, Elm, Go, Groovy, HCL, HTML, Java, JavaScript, Kotlin, Lua, Markdown, OCaml, PHP, Protobuf, Python, Ruby, Rust, Scala, SQL, Svelte, Swift, TOML, TypeScript, and YAML
+- **Multi-language support**: Works with 30+ languages via tree-sitter parsers
 - **Generic fallback**: Automatically falls back to line-based chunking for unsupported file types
 - **Configurable chunk sizes**: Set maximum chunk size in tokens, bytes, or lines
 - **Custom token counters**: Pluggable interface for custom tokenization strategies
 - **Overlap support**: Optional chunk overlapping for better context preservation
-- **Zero dependencies**: Uses tree-sitter with CGO (most mature option)
 
 ## Installation
 
@@ -171,39 +170,7 @@ chunks, err := chunker.Chunk(code,
 
 ## Supported Languages
 
-ChunkX supports 30+ programming languages via tree-sitter. Use the exported language constants from the `languages` package:
-
-- `languages.Bash` - Bash (`.sh`, `.bash`)
-- `languages.C` - C (`.c`, `.h`)
-- `languages.CPP` - C++ (`.cpp`, `.cc`, `.cxx`, `.hpp`, `.h`, `.hh`, `.hxx`)
-- `languages.CSharp` - C# (`.cs`)
-- `languages.CSS` - CSS (`.css`)
-- `languages.Cue` - Cue (`.cue`)
-- `languages.Dockerfile` - Dockerfile (`Dockerfile`, `.dockerfile`)
-- `languages.Elixir` - Elixir (`.ex`, `.exs`)
-- `languages.Elm` - Elm (`.elm`)
-- `languages.Go` - Go (`.go`)
-- `languages.Groovy` - Groovy (`.groovy`, `.gradle`)
-- `languages.HCL` - HCL (`.hcl`, `.tf`)
-- `languages.HTML` - HTML (`.html`, `.htm`)
-- `languages.Java` - Java (`.java`)
-- `languages.JavaScript` - JavaScript (`.js`, `.jsx`, `.mjs`, `.cjs`)
-- `languages.Kotlin` - Kotlin (`.kt`, `.kts`)
-- `languages.Lua` - Lua (`.lua`)
-- `languages.Markdown` - Markdown (`.md`, `.markdown`)
-- `languages.OCaml` - OCaml (`.ml`, `.mli`)
-- `languages.PHP` - PHP (`.php`, `.phtml`)
-- `languages.Protobuf` - Protocol Buffers (`.proto`)
-- `languages.Python` - Python (`.py`, `.pyi`, `.pyw`)
-- `languages.Ruby` - Ruby (`.rb`, `.rake`, `.gemspec`)
-- `languages.Rust` - Rust (`.rs`)
-- `languages.Scala` - Scala (`.scala`, `.sc`)
-- `languages.SQL` - SQL (`.sql`)
-- `languages.Svelte` - Svelte (`.svelte`)
-- `languages.Swift` - Swift (`.swift`)
-- `languages.TOML` - TOML (`.toml`)
-- `languages.TypeScript` - TypeScript (`.ts`, `.tsx`)
-- `languages.YAML` - YAML (`.yaml`, `.yml`)
+ChunkX supports 30+ programming languages via tree-sitter. Use the exported language constants from the `languages` package (e.g., `languages.Go`, `languages.Python`, `languages.JavaScript`, etc.). See the [languages package](languages/registry.go) for the complete list of supported languages and file extensions.
 
 For files with unrecognized extensions or explicitly using `languages.Generic`, ChunkX automatically falls back to a line-based chunking algorithm that maintains the chunking semantics without requiring AST parsing.
 
