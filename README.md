@@ -1,4 +1,4 @@
-# ChunkX
+# chunkx
 
 A Go library for AST-based code chunking implementing the CAST (Chunking via Abstract Syntax Trees) algorithm from the paper ["cAST: Enhancing Code Retrieval-Augmented Generation with Structural Chunking via Abstract Syntax Tree"](https://arxiv.org/pdf/2506.15655).
 
