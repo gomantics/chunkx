@@ -1,9 +1,12 @@
 package chunkx
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
+	approvals "github.com/approvals/go-approval-tests"
 	"github.com/gomantics/chunkx/languages"
 )
 
@@ -349,289 +352,79 @@ func (s *semicolonCounter) CountTokens(text string) (int, error) {
 	return strings.Count(text, ";"), nil
 }
 
-func TestIntegration_RealGoCode(t *testing.T) {
-	chunker := NewChunker()
-
-	// Real Go code example
-	code := `package main
-
-import (
-	"fmt"
-	"net/http"
-	"log"
-)
-
-type Server struct {
-	port string
-	handler http.Handler
+// ChunkingResult represents the complete output for a chunked file
+type ChunkingResult struct {
+	File     string  `json:"file"`
+	Language string  `json:"language"`
+	Chunks   []Chunk `json:"chunks"`
 }
 
-func NewServer(port string) *Server {
-	return &Server{
-		port: port,
-	}
-}
+// TestChunkingExamples tests chunking of real code examples and creates
+// human-readable approval snapshots in JSON format
+func TestChunkingExamples(t *testing.T) {
+	sourcesDir := "testdata/sources"
 
-func (s *Server) Start() error {
-	log.Printf("Starting server on port %s", s.port)
-	return http.ListenAndServe(":"+s.port, s.handler)
-}
-
-func (s *Server) SetHandler(h http.Handler) {
-	s.handler = h
-}
-
-func main() {
-	server := NewServer("8080")
-	
-	handler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello, World!")
-	})
-	
-	server.SetHandler(handler)
-	
-	if err := server.Start(); err != nil {
-		log.Fatal(err)
-	}
-}`
-
-	chunks, err := chunker.Chunk(code, WithLanguage(languages.Go), WithMaxSize(50))
+	// Read all source files
+	entries, err := os.ReadDir(sourcesDir)
 	if err != nil {
-		t.Fatalf("failed to chunk Go code: %v", err)
+		t.Fatalf("Failed to read sources directory: %v", err)
 	}
 
-	// Verify chunking properties
-	if len(chunks) < 2 {
-		t.Errorf("expected multiple chunks for large code, got %d", len(chunks))
-	}
-
-	// Verify that chunks don't break in the middle of functions
-	for i, chunk := range chunks {
-		// Simple heuristic: if chunk contains "func", it should contain the closing brace
-		if strings.Contains(chunk.Content, "func") && strings.Contains(chunk.Content, "{") {
-			openBraces := strings.Count(chunk.Content, "{")
-			closeBraces := strings.Count(chunk.Content, "}")
-			if openBraces > closeBraces {
-				t.Logf("Chunk %d may have split a function:\n%s", i, chunk.Content)
-			}
-		}
-	}
-
-	// Reconstruct the code and verify nothing is lost
-	var reconstructed string
-	lastEndByte := 0
-	for _, chunk := range chunks {
-		// Handle potential gaps between chunks
-		if chunk.StartByte > lastEndByte {
-			reconstructed += string([]byte(code)[lastEndByte:chunk.StartByte])
-		}
-		reconstructed += chunk.Content
-		lastEndByte = chunk.EndByte
-	}
-	// Add any remaining content
-	if lastEndByte < len(code) {
-		reconstructed += string([]byte(code)[lastEndByte:])
-	}
-
-	// The reconstructed code should match the original
-	if reconstructed != code && len(chunks) > 0 && chunks[0].StartByte == 0 {
-		t.Errorf("reconstructed code doesn't match original\nOriginal length: %d\nReconstructed length: %d",
-			len(code), len(reconstructed))
-	}
-}
-
-func TestIntegration_RealPythonCode(t *testing.T) {
 	chunker := NewChunker()
 
-	// Real Python code example
-	code := `import asyncio
-import aiohttp
-from typing import List, Dict, Any
-
-class AsyncWebScraper:
-	def __init__(self, max_concurrent: int = 10):
-		self.max_concurrent = max_concurrent
-		self.session = None
-		self.results = []
-	
-	async def __aenter__(self):
-		self.session = aiohttp.ClientSession()
-		return self
-	
-	async def __aexit__(self, exc_type, exc_val, exc_tb):
-		await self.session.close()
-	
-	async def fetch_url(self, url: str) -> Dict[str, Any]:
-		try:
-			async with self.session.get(url) as response:
-				return {
-					'url': url,
-					'status': response.status,
-					'content': await response.text()
-				}
-		except Exception as e:
-			return {
-				'url': url,
-				'error': str(e)
-			}
-	
-	async def scrape_urls(self, urls: List[str]) -> List[Dict[str, Any]]:
-		semaphore = asyncio.Semaphore(self.max_concurrent)
-		
-		async def fetch_with_semaphore(url):
-			async with semaphore:
-				return await self.fetch_url(url)
-		
-		tasks = [fetch_with_semaphore(url) for url in urls]
-		self.results = await asyncio.gather(*tasks)
-		return self.results
-
-async def main():
-	urls = [
-		'https://example.com',
-		'https://example.org',
-		'https://example.net'
-	]
-	
-	async with AsyncWebScraper(max_concurrent=5) as scraper:
-		results = await scraper.scrape_urls(urls)
-		for result in results:
-			if 'error' in result:
-				print(f"Error fetching {result['url']}: {result['error']}")
-			else:
-				print(f"Successfully fetched {result['url']} with status {result['status']}")
-
-if __name__ == "__main__":
-	asyncio.run(main())`
-
-	chunks, err := chunker.Chunk(code, WithLanguage(languages.Python), WithMaxSize(40))
-	if err != nil {
-		t.Fatalf("failed to chunk Python code: %v", err)
-	}
-
-	// Verify we got multiple chunks
-	if len(chunks) < 3 {
-		t.Errorf("expected at least 3 chunks for large Python code, got %d", len(chunks))
-	}
-
-	// Verify chunks maintain indentation structure
-	for i, chunk := range chunks {
-		lines := strings.Split(chunk.Content, "\n")
-		for j, line := range lines {
-			if line != "" && len(line) > 0 && line[0] != '\t' && line[0] != ' ' {
-				// Non-indented lines should typically be at the start of logical blocks
-				if j > 0 && strings.TrimSpace(lines[j-1]) != "" {
-					// Check if this is a valid Python construct that should start at column 0
-					validStarts := []string{"import ", "from ", "class ", "def ", "async ", "if __name__"}
-					isValid := false
-					for _, start := range validStarts {
-						if strings.HasPrefix(line, start) {
-							isValid = true
-							break
-						}
-					}
-					if !isValid && !strings.HasPrefix(line, "@") {
-						t.Logf("Chunk %d may have broken indentation at line %d: %s", i, j, line)
-					}
-				}
-			}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
 		}
-	}
-}
 
-func TestIntegration_MultipleLanguages(t *testing.T) {
-	chunker := NewChunker()
+		filename := entry.Name()
+		filepath := filepath.Join(sourcesDir, filename)
 
-	langs := []struct {
-		name languages.LanguageName
-		code string
-	}{
-		{
-			name: languages.JavaScript,
-			code: `const express = require('express');
-
-class UserController {
-	constructor(userService) {
-		this.userService = userService;
-	}
-	
-	async getUsers(req, res) {
-		try {
-			const users = await this.userService.findAll();
-			res.json(users);
-		} catch (error) {
-			res.status(500).json({ error: error.message });
-		}
-	}
-	
-	async createUser(req, res) {
-		try {
-			const user = await this.userService.create(req.body);
-			res.status(201).json(user);
-		} catch (error) {
-			res.status(400).json({ error: error.message });
-		}
-	}
-}
-
-module.exports = UserController;`,
-		},
-		{
-			name: languages.Java,
-			code: `package com.example.demo;
-
-import java.util.List;
-import java.util.ArrayList;
-import java.util.stream.Collectors;
-
-public class DataProcessor {
-	private List<String> data;
-	
-	public DataProcessor() {
-		this.data = new ArrayList<>();
-	}
-	
-	public void addData(String item) {
-		if (item != null && !item.isEmpty()) {
-			data.add(item);
-		}
-	}
-	
-	public List<String> processData() {
-		return data.stream()
-			.filter(item -> item.length() > 3)
-			.map(String::toUpperCase)
-			.sorted()
-			.collect(Collectors.toList());
-	}
-	
-	public int getDataSize() {
-		return data.size();
-	}
-}`,
-		},
-	}
-
-	for _, lang := range langs {
-		t.Run(string(lang.name), func(t *testing.T) {
-			chunks, err := chunker.Chunk(lang.code,
-				WithLanguage(lang.name),
-				WithMaxSize(25))
+		t.Run(filename, func(t *testing.T) {
+			// Chunk the file using ChunkFile for automatic language detection
+			chunks, err := chunker.ChunkFile(filepath, WithMaxSize(50))
 			if err != nil {
-				t.Fatalf("failed to chunk %s code: %v", lang.name, err)
+				t.Fatalf("Failed to chunk %s: %v", filename, err)
 			}
 
-			if len(chunks) == 0 {
-				t.Errorf("no chunks produced for %s code", lang.name)
+			// Determine language from chunks (all should have same language)
+			language := ""
+			if len(chunks) > 0 {
+				language = string(chunks[0].Language)
 			}
 
-			// Verify all chunks have the correct language
-			for i, chunk := range chunks {
-				if chunk.Language != lang.name {
-					t.Errorf("chunk %d has wrong language: got %s, want %s",
-						i, chunk.Language, lang.name)
-				}
+			// Create result structure
+			result := ChunkingResult{
+				File:     filename,
+				Language: language,
+				Chunks:   chunks,
 			}
+
+			// Use approvals to verify the JSON structure
+			// This will create filename.approved.json on first run
+			approvals.VerifyJSONStruct(t, result)
 		})
 	}
+}
+
+// TestChunkingExamplesWithOverlap tests chunking with overlap enabled
+func TestChunkingExamplesWithOverlap(t *testing.T) {
+	approvals.UseFolder("testdata")
+
+	// Test just the Go example with overlap to show the difference
+	filepath := "testdata/sources/example.go"
+
+	chunker := NewChunker()
+	chunks, err := chunker.ChunkFile(filepath, WithMaxSize(50), WithOverlap(20))
+	if err != nil {
+		t.Fatalf("Failed to chunk with overlap: %v", err)
+	}
+
+	result := ChunkingResult{
+		File:     "example.go",
+		Language: string(chunks[0].Language),
+		Chunks:   chunks,
+	}
+
+	approvals.VerifyJSONStruct(t, result)
 }

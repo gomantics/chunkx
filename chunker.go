@@ -21,6 +21,7 @@ package chunkx
 import (
 	"fmt"
 	"os"
+	"sort"
 	"strings"
 
 	"github.com/gomantics/chunkx/languages"
@@ -273,13 +274,23 @@ func (c *castChunker) chunkNodes(nodes []*sitter.Node, source []byte, cfg *confi
 func (c *castChunker) nodeToChunk(node *sitter.Node, source []byte, language languages.LanguageName) Chunk {
 	startLine, endLine := GetLineNumbers(node)
 
+	// Collect unique node types
+	nodeTypeSet := make(map[string]bool)
+	collectNodeTypes(node, nodeTypeSet)
+
+	nodeTypes := make([]string, 0, len(nodeTypeSet))
+	for nodeType := range nodeTypeSet {
+		nodeTypes = append(nodeTypes, nodeType)
+	}
+	sort.Strings(nodeTypes)
+
 	return Chunk{
 		Content:   GetNodeText(node, source),
 		StartLine: startLine,
 		EndLine:   endLine,
 		StartByte: int(node.StartByte()),
 		EndByte:   int(node.EndByte()),
-		NodeTypes: []string{node.Type()},
+		NodeTypes: nodeTypes,
 		Language:  language,
 	}
 }
@@ -297,11 +308,18 @@ func (c *castChunker) mergeNodesToChunk(nodes []*sitter.Node, source []byte, lan
 	startByte := firstNode.StartByte()
 	endByte := lastNode.EndByte()
 
-	// Collect all node types
-	nodeTypes := make([]string, 0, len(nodes))
+	// Collect unique node types using a map
+	nodeTypeSet := make(map[string]bool)
 	for _, node := range nodes {
-		nodeTypes = append(nodeTypes, node.Type())
+		collectNodeTypes(node, nodeTypeSet)
 	}
+
+	// Convert map to sorted slice for consistent output
+	nodeTypes := make([]string, 0, len(nodeTypeSet))
+	for nodeType := range nodeTypeSet {
+		nodeTypes = append(nodeTypes, nodeType)
+	}
+	sort.Strings(nodeTypes)
 
 	startLine, _ := GetLineNumbers(firstNode)
 	_, endLine := GetLineNumbers(lastNode)
@@ -377,6 +395,54 @@ func countLines(s string) int {
 		}
 	}
 	return count
+}
+
+// collectNodeTypes recursively collects all unique node types from a node and its descendants.
+func collectNodeTypes(node *sitter.Node, nodeTypeSet map[string]bool) {
+	if node == nil {
+		return
+	}
+
+	nodeType := node.Type()
+
+	// Skip pure punctuation/whitespace node types
+	if shouldIncludeNodeType(nodeType) {
+		nodeTypeSet[nodeType] = true
+	}
+
+	// Recursively collect from children
+	childCount := int(node.ChildCount())
+	for i := 0; i < childCount; i++ {
+		if child := node.Child(i); child != nil {
+			collectNodeTypes(child, nodeTypeSet)
+		}
+	}
+}
+
+// shouldIncludeNodeType determines if a node type should be included in the NodeTypes array.
+// Filters out pure punctuation, operators, and whitespace nodes that don't add semantic value.
+func shouldIncludeNodeType(nodeType string) bool {
+	// Filter out whitespace
+	if nodeType == "\n" || nodeType == "\t" || nodeType == " " {
+		return false
+	}
+
+	// Filter out node types that are purely punctuation/operators
+	// These don't add semantic value about code structure
+	for _, r := range nodeType {
+		// If the node type contains only punctuation/operator characters, skip it
+		if !isPunctuationOrOperator(r) {
+			return true
+		}
+	}
+
+	// All characters are punctuation/operators, so skip this node type
+	return false
+}
+
+// isPunctuationOrOperator checks if a rune is a punctuation or operator character.
+func isPunctuationOrOperator(r rune) bool {
+	return strings.ContainsRune("{}()[]<>;:,.=*&|!~^%+-/?#@$\\\"'`", r)
 }
 
 // chunkGeneric implements a simple line-based chunking algorithm for unsupported languages.

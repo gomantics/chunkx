@@ -226,6 +226,22 @@ BenchmarkOverlapChunking/Overlap50-14               41696     85976 ns/op   2236
 
 AST-based chunking is ~100x slower than naive line-based chunking but produces semantically superior chunks that improve RAG performance. The SimpleTokenCounter and LineCounter provide the best performance, while ByteCounter has slightly higher overhead due to more allocations. Chunk overlap has minimal performance impact (~0.5% overhead).
 
+## Examples
+
+The `testdata/` directory contains real-world code examples in multiple languages, along with their chunked outputs in JSON format. These examples serve as both documentation and regression tests:
+
+- **`testdata/sources/`**: Example source files in Go, Python, JavaScript, TypeScript, Java, Rust, and C++
+- **`testdata/*.approved.json`**: Snapshot test outputs showing how each example is chunked
+
+To see how chunkx handles different languages and chunk sizes, browse the approved JSON files. They show:
+
+- Complete chunk content
+- Line and byte ranges
+- AST node types included in each chunk
+- How semantic boundaries are preserved
+
+The snapshots are automatically verified using [go-approval-tests](https://github.com/approvals/go-approval-tests) to ensure chunking behavior remains consistent across changes.
+
 ## Testing
 
 ```bash
@@ -237,6 +253,9 @@ go test -bench=. -benchtime=10s
 
 # Run with coverage
 go test -cover ./...
+
+# Run approval tests (regenerate snapshots on first failure)
+go test -run TestChunkingExamples
 ```
 
 ## Use Cases

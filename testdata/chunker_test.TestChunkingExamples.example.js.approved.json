@@ -1,0 +1,551 @@
+{
+  "file": "example.js",
+  "language": "javascript",
+  "chunks": [
+    {
+      "Content": "const express = require(\"express\");\nconst { body, validationResult } = require(\"express-validator\");\n\n/**\n * UserController handles all user-related HTTP endpoints\n */",
+      "StartLine": 1,
+      "EndLine": 6,
+      "StartByte": 0,
+      "EndByte": 167,
+      "NodeTypes": [
+        "arguments",
+        "call_expression",
+        "comment",
+        "const",
+        "identifier",
+        "lexical_declaration",
+        "object_pattern",
+        "shorthand_property_identifier_pattern",
+        "string",
+        "string_fragment",
+        "variable_declarator"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "class UserController",
+      "StartLine": 7,
+      "EndLine": 7,
+      "StartByte": 168,
+      "EndByte": 188,
+      "NodeTypes": [
+        "class",
+        "identifier"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "{\n  constructor(userService, logger) {\n    this.userService = userService;\n    this.logger = logger;\n  }\n\n  /**\n   * Get all users with optional filtering and pagination\n   */",
+      "StartLine": 7,
+      "EndLine": 15,
+      "StartByte": 189,
+      "EndByte": 364,
+      "NodeTypes": [
+        "assignment_expression",
+        "comment",
+        "expression_statement",
+        "formal_parameters",
+        "identifier",
+        "member_expression",
+        "method_definition",
+        "property_identifier",
+        "statement_block",
+        "this"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "async getUsers(req, res)",
+      "StartLine": 16,
+      "EndLine": 16,
+      "StartByte": 367,
+      "EndByte": 391,
+      "NodeTypes": [
+        "async",
+        "formal_parameters",
+        "identifier",
+        "property_identifier"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "{",
+      "StartLine": 16,
+      "EndLine": 16,
+      "StartByte": 392,
+      "EndByte": 393,
+      "NodeTypes": [],
+      "Language": "javascript"
+    },
+    {
+      "Content": "try",
+      "StartLine": 17,
+      "EndLine": 17,
+      "StartByte": 398,
+      "EndByte": 401,
+      "NodeTypes": [
+        "try"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "{\n      const { page = 1, limit = 10, search = \"\" } = req.query;\n\n      const options = {\n        page: parseInt(page),\n        limit: parseInt(limit),\n        search: search.trim(),\n      };\n\n      const users = await this.userService.findAll(options);\n      const total = await this.userService.count(options.search);",
+      "StartLine": 17,
+      "EndLine": 27,
+      "StartByte": 402,
+      "EndByte": 721,
+      "NodeTypes": [
+        "arguments",
+        "await",
+        "await_expression",
+        "call_expression",
+        "const",
+        "identifier",
+        "lexical_declaration",
+        "member_expression",
+        "number",
+        "object",
+        "object_assignment_pattern",
+        "object_pattern",
+        "pair",
+        "property_identifier",
+        "shorthand_property_identifier_pattern",
+        "string",
+        "this",
+        "variable_declarator"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "res.json({\n        data: users,\n        pagination: {\n          page: options.page,\n          limit: options.limit,\n          total: total,\n          pages: Math.ceil(total / options.limit),\n        },\n      });\n    }",
+      "StartLine": 29,
+      "EndLine": 38,
+      "StartByte": 729,
+      "EndByte": 946,
+      "NodeTypes": [
+        "arguments",
+        "binary_expression",
+        "call_expression",
+        "expression_statement",
+        "identifier",
+        "member_expression",
+        "object",
+        "pair",
+        "property_identifier"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "catch (error) {\n      this.logger.error(\"Error fetching users:\", error);\n      res.status(500).json({ error: \"Internal server error\" });\n    }",
+      "StartLine": 38,
+      "EndLine": 41,
+      "StartByte": 947,
+      "EndByte": 1089,
+      "NodeTypes": [
+        "arguments",
+        "call_expression",
+        "catch",
+        "catch_clause",
+        "expression_statement",
+        "identifier",
+        "member_expression",
+        "number",
+        "object",
+        "pair",
+        "property_identifier",
+        "statement_block",
+        "string",
+        "string_fragment",
+        "this"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "}",
+      "StartLine": 42,
+      "EndLine": 42,
+      "StartByte": 1092,
+      "EndByte": 1093,
+      "NodeTypes": [],
+      "Language": "javascript"
+    },
+    {
+      "Content": "/**\n   * Get a single user by ID\n   */",
+      "StartLine": 44,
+      "EndLine": 46,
+      "StartByte": 1097,
+      "EndByte": 1135,
+      "NodeTypes": [
+        "comment"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "async getUserById(req, res) {\n    try {\n      const { id } = req.params;\n      const user = await this.userService.findById(id);\n\n      if (!user) {\n        return res.status(404).json({ error: \"User not found\" });\n      }\n\n      res.json({ data: user });\n    } catch (error) {\n      this.logger.error(`Error fetching user ${req.params.id}:`, error);\n      res.status(500).json({ error: \"Internal server error\" });\n    }\n  }",
+      "StartLine": 47,
+      "EndLine": 61,
+      "StartByte": 1138,
+      "EndByte": 1562,
+      "NodeTypes": [
+        "arguments",
+        "async",
+        "await",
+        "await_expression",
+        "call_expression",
+        "catch",
+        "catch_clause",
+        "const",
+        "expression_statement",
+        "formal_parameters",
+        "identifier",
+        "if",
+        "if_statement",
+        "lexical_declaration",
+        "member_expression",
+        "method_definition",
+        "number",
+        "object",
+        "object_pattern",
+        "pair",
+        "parenthesized_expression",
+        "property_identifier",
+        "return",
+        "return_statement",
+        "shorthand_property_identifier_pattern",
+        "statement_block",
+        "string",
+        "string_fragment",
+        "template_string",
+        "template_substitution",
+        "this",
+        "try",
+        "try_statement",
+        "unary_expression",
+        "variable_declarator"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "/**\n   * Create a new user\n   */",
+      "StartLine": 63,
+      "EndLine": 65,
+      "StartByte": 1566,
+      "EndByte": 1598,
+      "NodeTypes": [
+        "comment"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "async createUser(req, res)",
+      "StartLine": 66,
+      "EndLine": 66,
+      "StartByte": 1601,
+      "EndByte": 1627,
+      "NodeTypes": [
+        "async",
+        "formal_parameters",
+        "identifier",
+        "property_identifier"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "{",
+      "StartLine": 66,
+      "EndLine": 66,
+      "StartByte": 1628,
+      "EndByte": 1629,
+      "NodeTypes": [],
+      "Language": "javascript"
+    },
+    {
+      "Content": "try {\n      const errors = validationResult(req);\n      if (!errors.isEmpty()) {\n        return res.status(400).json({ errors: errors.array() });\n      }\n\n      const userData = {\n        email: req.body.email,\n        name: req.body.name,\n        role: req.body.role || \"user\",\n      };\n\n      const user = await this.userService.create(userData);\n\n      this.logger.info(`User created: ${user.id}`);\n      res.status(201).json({ data: user });\n    }",
+      "StartLine": 67,
+      "EndLine": 83,
+      "StartByte": 1634,
+      "EndByte": 2085,
+      "NodeTypes": [
+        "arguments",
+        "await",
+        "await_expression",
+        "binary_expression",
+        "call_expression",
+        "const",
+        "expression_statement",
+        "identifier",
+        "if",
+        "if_statement",
+        "lexical_declaration",
+        "member_expression",
+        "number",
+        "object",
+        "pair",
+        "parenthesized_expression",
+        "property_identifier",
+        "return",
+        "return_statement",
+        "statement_block",
+        "string",
+        "string_fragment",
+        "template_string",
+        "template_substitution",
+        "this",
+        "try",
+        "unary_expression",
+        "variable_declarator"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "catch (error) {\n      if (error.code === \"DUPLICATE_EMAIL\") {\n        return res.status(409).json({ error: \"Email already exists\" });\n      }\n      this.logger.error(\"Error creating user:\", error);\n      res.status(500).json({ error: \"Internal server error\" });\n    }",
+      "StartLine": 83,
+      "EndLine": 89,
+      "StartByte": 2086,
+      "EndByte": 2353,
+      "NodeTypes": [
+        "arguments",
+        "binary_expression",
+        "call_expression",
+        "catch",
+        "catch_clause",
+        "expression_statement",
+        "identifier",
+        "if",
+        "if_statement",
+        "member_expression",
+        "number",
+        "object",
+        "pair",
+        "parenthesized_expression",
+        "property_identifier",
+        "return",
+        "return_statement",
+        "statement_block",
+        "string",
+        "string_fragment",
+        "this"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "}",
+      "StartLine": 90,
+      "EndLine": 90,
+      "StartByte": 2356,
+      "EndByte": 2357,
+      "NodeTypes": [],
+      "Language": "javascript"
+    },
+    {
+      "Content": "/**\n   * Update an existing user\n   */",
+      "StartLine": 92,
+      "EndLine": 94,
+      "StartByte": 2361,
+      "EndByte": 2399,
+      "NodeTypes": [
+        "comment"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "async updateUser(req, res)",
+      "StartLine": 95,
+      "EndLine": 95,
+      "StartByte": 2402,
+      "EndByte": 2428,
+      "NodeTypes": [
+        "async",
+        "formal_parameters",
+        "identifier",
+        "property_identifier"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "{",
+      "StartLine": 95,
+      "EndLine": 95,
+      "StartByte": 2429,
+      "EndByte": 2430,
+      "NodeTypes": [],
+      "Language": "javascript"
+    },
+    {
+      "Content": "try",
+      "StartLine": 96,
+      "EndLine": 96,
+      "StartByte": 2435,
+      "EndByte": 2438,
+      "NodeTypes": [
+        "try"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "{\n      const { id } = req.params;\n      const errors = validationResult(req);\n\n      if (!errors.isEmpty()) {\n        return res.status(400).json({ errors: errors.array() });\n      }\n\n      const updates = {\n        email: req.body.email,\n        name: req.body.name,\n        role: req.body.role,\n      };\n\n      const user = await this.userService.update(id, updates);\n\n      if (!user) {\n        return res.status(404).json({ error: \"User not found\" });\n      }",
+      "StartLine": 96,
+      "EndLine": 114,
+      "StartByte": 2439,
+      "EndByte": 2903,
+      "NodeTypes": [
+        "arguments",
+        "await",
+        "await_expression",
+        "call_expression",
+        "const",
+        "identifier",
+        "if",
+        "if_statement",
+        "lexical_declaration",
+        "member_expression",
+        "number",
+        "object",
+        "object_pattern",
+        "pair",
+        "parenthesized_expression",
+        "property_identifier",
+        "return",
+        "return_statement",
+        "shorthand_property_identifier_pattern",
+        "statement_block",
+        "string",
+        "string_fragment",
+        "this",
+        "unary_expression",
+        "variable_declarator"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "this.logger.info(`User updated: ${id}`);\n      res.json({ data: user });\n    }",
+      "StartLine": 116,
+      "EndLine": 118,
+      "StartByte": 2911,
+      "EndByte": 2989,
+      "NodeTypes": [
+        "arguments",
+        "call_expression",
+        "expression_statement",
+        "identifier",
+        "member_expression",
+        "object",
+        "pair",
+        "property_identifier",
+        "string_fragment",
+        "template_string",
+        "template_substitution",
+        "this"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "catch (error) {\n      this.logger.error(`Error updating user ${req.params.id}:`, error);\n      res.status(500).json({ error: \"Internal server error\" });\n    }",
+      "StartLine": 118,
+      "EndLine": 121,
+      "StartByte": 2990,
+      "EndByte": 3148,
+      "NodeTypes": [
+        "arguments",
+        "call_expression",
+        "catch",
+        "catch_clause",
+        "expression_statement",
+        "identifier",
+        "member_expression",
+        "number",
+        "object",
+        "pair",
+        "property_identifier",
+        "statement_block",
+        "string",
+        "string_fragment",
+        "template_string",
+        "template_substitution",
+        "this"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "}",
+      "StartLine": 122,
+      "EndLine": 122,
+      "StartByte": 3151,
+      "EndByte": 3152,
+      "NodeTypes": [],
+      "Language": "javascript"
+    },
+    {
+      "Content": "/**\n   * Delete a user\n   */",
+      "StartLine": 124,
+      "EndLine": 126,
+      "StartByte": 3156,
+      "EndByte": 3184,
+      "NodeTypes": [
+        "comment"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "async deleteUser(req, res) {\n    try {\n      const { id } = req.params;\n      const deleted = await this.userService.delete(id);\n\n      if (!deleted) {\n        return res.status(404).json({ error: \"User not found\" });\n      }\n\n      this.logger.info(`User deleted: ${id}`);\n      res.status(204).send();\n    } catch (error) {\n      this.logger.error(`Error deleting user ${req.params.id}:`, error);\n      res.status(500).json({ error: \"Internal server error\" });\n    }\n  }\n}",
+      "StartLine": 127,
+      "EndLine": 143,
+      "StartByte": 3187,
+      "EndByte": 3661,
+      "NodeTypes": [
+        "arguments",
+        "async",
+        "await",
+        "await_expression",
+        "call_expression",
+        "catch",
+        "catch_clause",
+        "const",
+        "expression_statement",
+        "formal_parameters",
+        "identifier",
+        "if",
+        "if_statement",
+        "lexical_declaration",
+        "member_expression",
+        "method_definition",
+        "number",
+        "object",
+        "object_pattern",
+        "pair",
+        "parenthesized_expression",
+        "property_identifier",
+        "return",
+        "return_statement",
+        "shorthand_property_identifier_pattern",
+        "statement_block",
+        "string",
+        "string_fragment",
+        "template_string",
+        "template_substitution",
+        "this",
+        "try",
+        "try_statement",
+        "unary_expression",
+        "variable_declarator"
+      ],
+      "Language": "javascript"
+    },
+    {
+      "Content": "module.exports = UserController;",
+      "StartLine": 145,
+      "EndLine": 145,
+      "StartByte": 3663,
+      "EndByte": 3695,
+      "NodeTypes": [
+        "assignment_expression",
+        "expression_statement",
+        "identifier",
+        "member_expression",
+        "property_identifier"
+      ],
+      "Language": "javascript"
+    }
+  ]
+}
